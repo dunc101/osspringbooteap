@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Implementation-Title: ELMHostMetricsGenerator
+Implementation-Title: osspringbooteap
 Implementation-Version: 1.0.0
 Built-By: DuncanDA
 Implementation-Vendor-Id: com.ipacc.enterprise.elm
