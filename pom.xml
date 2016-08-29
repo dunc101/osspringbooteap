@@ -94,34 +94,6 @@
 			</resource>
 		</resources>
 		<plugins>
-			<!-- Comment when using JBOSS as it is not needed -->
-			<!--<plugin> <groupId>org.springframework.boot</groupId> <artifactId>spring-boot-maven-plugin</artifactId> 
-				</plugin> -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>aspectj-maven-plugin</artifactId>
-				<version>1.7</version>
-				<configuration>
-					<complianceLevel>${java.version}</complianceLevel>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
-
-					<aspectLibraries>
-						<aspectLibrary>
-							<groupId>com.ipacc.enterprise.elm</groupId>
-							<artifactId>elm-instrumentation</artifactId>
-						</aspectLibrary>
-					</aspectLibraries>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>compile</goal>
-							<goal>test-compile</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
 	</build>
 	<repositories>
