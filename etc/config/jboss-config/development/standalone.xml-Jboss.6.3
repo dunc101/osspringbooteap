@@ -1,0 +1,127 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<server xmlns="urn:jboss:domain:1.4">
+    <extensions>
+        <extension module="org.jboss.as.connector"/>
+        <extension module="org.jboss.as.deployment-scanner"/>
+        <extension module="org.jboss.as.ee"/>
+        <extension module="org.jboss.as.naming"/>
+        <extension module="org.jboss.as.remoting"/>
+        <extension module="org.jboss.as.security"/>
+        <extension module="org.jboss.as.threads"/>
+        <extension module="org.jboss.as.web"/>
+    </extensions>
+	
+	<system-properties>
+	    <property name="spring.profiles.active" value="development"/>
+		<property name="h2excel" value="true"/>
+		<property name="org.jboss.as.logging.per-deployment" value="false"/>
+		<property name="logging.dir" value="/usr/jboss/logs/standalone-ELMSpringBootJbossTemplate-15880"/>
+    </system-properties>
+	
+	<management>
+		<security-realms>
+			<security-realm name="ManagementRealm">
+				<authentication>
+					<local default-user="$local" />
+					<properties path="mgmt-users.properties" relative-to="jboss.server.config.dir" />
+				</authentication>
+			</security-realm>
+			<security-realm name="ApplicationRealm">
+				<authentication>
+					<local default-user="$local" allowed-users="*" />
+					<properties path="application-users.properties"
+						relative-to="jboss.server.config.dir" />
+				</authentication>
+				<authorization>
+					<properties path="application-roles.properties"
+						relative-to="jboss.server.config.dir" />
+				</authorization>
+			</security-realm>
+		</security-realms>
+		<management-interfaces>
+			<native-interface security-realm="ManagementRealm">
+				<socket-binding native="management-native" />
+			</native-interface>
+			<http-interface security-realm="ManagementRealm">
+				<socket-binding http="management-http" />
+			</http-interface>
+		</management-interfaces>
+	</management>
+    <profile>
+        <subsystem xmlns="urn:jboss:domain:deployment-scanner:1.1">
+            <deployment-scanner path="deployments" relative-to="jboss.server.base.dir" scan-interval="5000"/>
+        </subsystem>
+	
+        <subsystem xmlns="urn:jboss:domain:ee:1.2">
+            <spec-descriptor-property-replacement>false</spec-descriptor-property-replacement>
+            <jboss-descriptor-property-replacement>true</jboss-descriptor-property-replacement>
+            <annotation-property-replacement>false</annotation-property-replacement>
+        </subsystem>
+        <subsystem xmlns="urn:jboss:domain:naming:1.4">
+            <remote-naming/>
+        </subsystem>
+		<subsystem xmlns="urn:jboss:domain:remoting:1.1">
+			<connector name="remoting-connector" socket-binding="remoting"
+				security-realm="ApplicationRealm" />
+		</subsystem>
+        <subsystem xmlns="urn:jboss:domain:resource-adapters:1.1"/>
+         <subsystem xmlns="urn:jboss:domain:security:1.2">
+            <security-domains>
+                <security-domain name="other" cache-type="default">
+                    <authentication>
+                        <login-module code="Remoting" flag="optional">
+                            <module-option name="password-stacking" value="useFirstPass"/>
+                        </login-module>
+                        <login-module code="RealmDirect" flag="required">
+                            <module-option name="password-stacking" value="useFirstPass"/>
+                        </login-module>
+                    </authentication>
+                </security-domain>
+                <security-domain name="jboss-web-policy" cache-type="default">
+                    <authorization>
+                        <policy-module code="Delegating" flag="required"/>
+                    </authorization>
+                </security-domain>
+                <security-domain name="jboss-ejb-policy" cache-type="default">
+                    <authorization>
+                        <policy-module code="Delegating" flag="required"/>
+                    </authorization>
+                </security-domain>
+            </security-domains>
+        </subsystem>
+        <subsystem xmlns="urn:jboss:domain:threads:1.1"/>
+        <subsystem xmlns="urn:jboss:domain:web:1.4" default-virtual-server="default-host" native="false">
+            <connector name="http" protocol="HTTP/1.1" scheme="http" socket-binding="http"/>
+            <virtual-server name="default-host" enable-welcome-root="false">
+                <alias name="localhost"/>
+                <alias name="example.com"/>
+            </virtual-server>
+        </subsystem>
+    </profile>
+    <interfaces>
+        <interface name="management">
+            <inet-address value="${jboss.bind.address.management:0.0.0.0}"/>
+        </interface>
+        <interface name="public">
+            <inet-address value="${jboss.bind.address:0.0.0.0}"/>
+        </interface>
+        <interface name="unsecure">
+            <inet-address value="${jboss.bind.address.unsecure:0.0.0.0}"/>
+        </interface>
+    </interfaces>
+    <socket-binding-group name="standard-sockets" default-interface="public" port-offset="${jboss.socket.binding.port-offset:0}">
+        <socket-binding name="management-native" interface="management" port="${jboss.management.native.port:9999}"/>
+        <socket-binding name="management-http" interface="management" port="${jboss.management.http.port:17790}"/>
+        <socket-binding name="management-https" interface="management" port="${jboss.management.https.port:9443}"/>
+        <socket-binding name="ajp" port="8009"/>
+        <socket-binding name="http" port="15880"/>
+        <socket-binding name="https" port="16243"/>
+        <socket-binding name="remoting" port="4447"/>
+        <socket-binding name="txn-recovery-environment" port="4712"/>
+        <socket-binding name="txn-status-manager" port="4713"/>
+        <outbound-socket-binding name="mail-smtp">
+            <remote-destination host="localhost" port="25"/>
+        </outbound-socket-binding>
+    </socket-binding-group>
+</server>

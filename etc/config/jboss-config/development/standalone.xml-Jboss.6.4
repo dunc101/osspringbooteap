@@ -1,0 +1,176 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<server xmlns="urn:jboss:domain:1.7">
+    <extensions>
+        <extension module="org.jboss.as.connector"/>
+        <extension module="org.jboss.as.deployment-scanner"/>
+        <extension module="org.jboss.as.ee"/>
+        <extension module="org.jboss.as.naming"/>
+        <extension module="org.jboss.as.remoting"/>
+        <extension module="org.jboss.as.security"/>
+        <extension module="org.jboss.as.threads"/>
+        <extension module="org.jboss.as.web"/>
+		<extension module="org.jboss.as.jmx"/>
+    </extensions>
+	
+	<system-properties>
+	    <property name="spring.profiles.active" value="development"/>
+		<property name="h2excel" value="true"/>
+		<property name="org.jboss.as.logging.per-deployment" value="false"/>
+        <property name="logging.dir" value="/usr/jboss/logs/standalone-ELMHostMetricsGenerator-15880"/>
+    </system-properties>
+	
+<management>
+        <security-realms>
+			<security-realm name="ldap_security_realm">
+                <authentication>
+                    <ldap connection="ldap_connection" base-dn="DC=ad,DC=ipacc,DC=com" recursive="true">
+                        <username-filter attribute="displayname"/>
+                    </ldap>
+                </authentication>
+                <authorization map-groups-to-roles="true">
+                    <ldap connection="ldap_connection">
+                        <group-search group-name="SIMPLE" iterative="true" group-dn-attribute="dn" group-name-attribute="cn">
+                            <principal-to-group group-attribute="memberOf"/>
+                        </group-search>
+                    </ldap>
+                </authorization>
+            </security-realm>
+        </security-realms>
+        <outbound-connections>
+            <ldap name="ldap_connection" url="ldap://ad.ipacc.com:389" search-dn="CN=SVC_JBOSS_READ,OU=ServiceAccounts,OU=SpecialPurposeUsers,OU=AdministrativeSpecial-GroupsAndUsers,DC=ad,DC=ipacc,DC=com" search-credential="EQTB0gS6XdzL1OvWigNM"/>
+        </outbound-connections>
+        <audit-log>
+            <formatters>
+                <json-formatter name="json-formatter"/>
+            </formatters>
+            <handlers>
+                <file-handler name="file" formatter="json-formatter" path="audit-log.log" relative-to="jboss.server.data.dir"/>
+            </handlers>
+            <logger log-boot="true" log-read-only="false" enabled="false">
+                <handlers>
+                    <handler name="file"/>
+                </handlers>
+            </logger>
+        </audit-log>
+        <management-interfaces>
+            <native-interface security-realm="ldap_security_realm">
+                <socket-binding native="management-native"/>
+            </native-interface>
+            <http-interface security-realm="ldap_security_realm">
+                <socket-binding http="management-http"/>
+            </http-interface>
+        </management-interfaces>
+        <access-control provider="rbac">
+            
+	    <!-- Production access configuration. To gain access, contact the intel team to be added to ASEteam_JBOSS_Development -->
+            <role-mapping>
+                <role name="SuperUser">
+                    <include>
+                        <group realm="ldap_security_realm" name="ASEteam_JBOSS_admin"/>
+                    </include>
+                </role>
+                <role name="Monitor">
+                    <include>
+                        <user name="$local"/>
+                        <group realm="ldap_security_realm" name="ASEteam_JBOSS_Development"/>
+                    </include>
+                </role>
+            </role-mapping>
+
+	    <!-- Uncomment the code below and comment out the code above to enable administrative access in dev and test. Do not leave this in place for production -->
+	    <!--
+	    <role-mapping>
+                <role name="SuperUser">
+                    <include>
+                        <group realm="ldap_security_realm" name="ASEteam_JBOSS_admin"/>
+               		<group realm="ldap_security_realm" name="ASEteam_JBOSS_Development"/>
+	            </include>
+                </role>
+		</role-mapping>
+	    -->
+
+        </access-control>
+    </management>
+    <profile>
+        <subsystem xmlns="urn:jboss:domain:deployment-scanner:1.1">
+            <deployment-scanner path="deployments" relative-to="jboss.server.base.dir" scan-interval="5000"/>
+        </subsystem>
+	
+        <subsystem xmlns="urn:jboss:domain:ee:1.2">
+            <spec-descriptor-property-replacement>false</spec-descriptor-property-replacement>
+            <jboss-descriptor-property-replacement>true</jboss-descriptor-property-replacement>
+            <annotation-property-replacement>false</annotation-property-replacement>
+        </subsystem>
+        <subsystem xmlns="urn:jboss:domain:naming:1.4">
+            <remote-naming/>
+        </subsystem>
+		<subsystem xmlns="urn:jboss:domain:jmx:1.3">
+            <expose-resolved-model/>
+            <expose-expression-model/>
+            <remoting-connector/>
+        </subsystem>
+		<subsystem xmlns="urn:jboss:domain:remoting:1.2">
+			<!--<connector name="remoting-connector" socket-binding="remoting"
+				security-realm="ApplicationRealm" />-->
+		</subsystem>
+        <subsystem xmlns="urn:jboss:domain:resource-adapters:1.1"/>
+         <subsystem xmlns="urn:jboss:domain:security:1.2">
+            <security-domains>
+                <security-domain name="other" cache-type="default">
+                    <authentication>
+                        <login-module code="Remoting" flag="optional">
+                            <module-option name="password-stacking" value="useFirstPass"/>
+                        </login-module>
+                        <login-module code="RealmDirect" flag="required">
+                            <module-option name="password-stacking" value="useFirstPass"/>
+                        </login-module>
+                    </authentication>
+                </security-domain>
+                <security-domain name="jboss-web-policy" cache-type="default">
+                    <authorization>
+                        <policy-module code="Delegating" flag="required"/>
+                    </authorization>
+                </security-domain>
+                <security-domain name="jboss-ejb-policy" cache-type="default">
+                    <authorization>
+                        <policy-module code="Delegating" flag="required"/>
+                    </authorization>
+                </security-domain>
+            </security-domains>
+        </subsystem>
+        <subsystem xmlns="urn:jboss:domain:threads:1.1"/>
+        <subsystem xmlns="urn:jboss:domain:web:2.2" default-virtual-server="default-host" native="false">
+            <connector name="http" protocol="HTTP/1.1" scheme="http" socket-binding="http"/>
+            <virtual-server name="default-host" enable-welcome-root="true">
+                <alias name="localhost"/>
+                <alias name="example.com"/>
+            </virtual-server>
+        </subsystem>
+    </profile>
+    <interfaces>
+        <interface name="management">
+            <inet-address value="${jboss.bind.address.management:127.0.0.1}"/>
+        </interface>
+        <interface name="public">
+            <inet-address value="${jboss.bind.address:127.0.0.1}"/>
+        </interface>
+        <interface name="unsecure">
+            <inet-address value="${jboss.bind.address.unsecure:127.0.0.1}"/>
+        </interface>
+    </interfaces>
+    <socket-binding-group name="standard-sockets" default-interface="public" port-offset="${jboss.socket.binding.port-offset:0}">
+        <socket-binding name="management-native" interface="management" port="${jboss.management.native.port:9999}"/>
+        <socket-binding name="management-http" interface="management" port="${jboss.management.http.port:17790}"/>
+        <socket-binding name="management-https" interface="management" port="${jboss.management.https.port:9443}"/>
+        <socket-binding name="ajp" port="8009"/>
+        <socket-binding name="http" port="15880"/>
+        <socket-binding name="https" port="16243"/>
+        <socket-binding name="remoting" port="4447"/>
+        <socket-binding name="txn-recovery-environment" port="4712"/>
+        <socket-binding name="txn-status-manager" port="4713"/>
+        <outbound-socket-binding name="mail-smtp">
+            <remote-destination host="localhost" port="25"/>
+        </outbound-socket-binding>
+    </socket-binding-group>
+</server>
