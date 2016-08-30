@@ -4,8 +4,8 @@ node {
     def pomdirectory = "osspringbooteap"
     def dockerimagename = "openshiftspringbootdemo/openshiftspringbootdemo"
     def app = "osspringbooteap"
-    def readinessprobe = "http://localhost:8080/health"
-    def livenessprobe = "http://localhost:8080/health"
+    def readinessprobe = "http://localhost:8080/osspringbooteap-1.0.0/health"
+    def livenessprobe = "http://localhost:8080/osspringbooteap-1.0.0health"
     def containertype = "eap64"
     def replicas = "3"
     
