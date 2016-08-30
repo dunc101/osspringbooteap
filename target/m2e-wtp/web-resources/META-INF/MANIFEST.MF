@@ -4,6 +4,8 @@ Implementation-Version: 1.0.0
 Built-By: DuncanDA
 Implementation-Vendor-Id: com.ipacc.enterprise.elm
 Build-Jdk: 1.8.0_91
+Implementation-URL: http://projects.spring.io/spring-boot/osspringboot
+ eap/
 Created-By: Maven Integration for Eclipse
 Implementation-Vendor: Pivotal Software, Inc.
 
